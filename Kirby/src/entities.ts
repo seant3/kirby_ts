@@ -1,5 +1,21 @@
-import { GameObj, KaboomCtx } from "kaboom";
+import { AreaComp, BodyComp, DoubleJumpComp, GameObj, HealthComp, KaboomCtx, OpacityComp, PosComp, ScaleComp, SpriteComp } from "kaboom";
 import { scale } from "./constants";
+
+type PlayerGameObj = GameObj<
+    SpriteComp &
+        AreaComp &
+        BodyComp &
+        PosComp &
+        ScaleComp &
+        DoubleJumpComp &
+        HealthComp &
+        OpacityComp & {
+            speed: number;
+            direction: string;
+            isInhaling: boolean;
+            isFull: boolean;
+        }
+>;
 
 export function makePlayer(k: KaboomCtx, posX: number, posY: number) {
     const player = k.make([
@@ -89,4 +105,36 @@ export function makePlayer(k: KaboomCtx, posX: number, posY: number) {
     });
 
     return player;
+}
+
+export function setControls(k: KaboomCtx, player: PlayerGameObj) {
+    const inhaleEffectRef = k.get("inhaleEffect")[0];
+
+    k.onKeyDown((key) => {
+        switch (key) {
+            case "left":
+                player.direction = "left";
+                player.flipX = true;
+                player.move(-player.speed, 0);
+                break;
+            case "right":
+                player.direction = "right";
+                player.flipX = false;
+                player.move(player.speed, 0);
+                break;
+            case "z":
+                if (player.isFull) {
+                    player.play("kirbFull");
+                    inhaleEffectRef.opacity = 0;
+                    break;
+                }
+
+                player.isInhaling = true;
+                player.play("kirbInhaling");
+                inhaleEffectRef.opacity = 1;
+                break;
+            default:
+        }
+
+    })
 }
